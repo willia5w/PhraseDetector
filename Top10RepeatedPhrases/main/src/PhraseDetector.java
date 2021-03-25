@@ -3,9 +3,12 @@ import java.util.Scanner;
 /**
  * Created by: Dan Williams on 3/24/2021 Cell: (201) 937-5556 Email: williams.dan@northeastern.edu
  *
- * This program takes a string representing a document, write a function or class which returns
- * the top 10 most frequent repeated phrases.
+ * This program requests a document from the user in the form of a String.
+ *
+ * It then outputs the top 10 most frequent repeated phrases.
  */
+
+
 public class PhraseDetector {
   /**
    * A phrase is a stretch of three to ten consecutive words and cannot span sentences.
@@ -23,17 +26,18 @@ public class PhraseDetector {
    * ['the lazy dog', 'the quick brown fox jumped over']
    */
 
+
   public static void main(String[] args) throws Exception {
 
     TextCleaner cleaner = new TextCleaner();
 
-    Scanner sc= new Scanner(System.in); //System.in is a standard input stream
-    System.out.print("Enter a string: ");
+    Scanner sc= new Scanner(System.in);
+    System.out.print("Submit Document: ");
     String str= sc.nextLine();
-    System.out.print("\n");
+//    System.out.print("\n");
 
-    if (str.length()==0) throw new NullPointerException("Check the input parameters: String should not be null");
+    if (str.length()==0) throw new NullPointerException("Document should not be null");
+
     cleaner.Clean(str);
-//    for (Object obj : words) {System.out.println(obj);}
   }
 }

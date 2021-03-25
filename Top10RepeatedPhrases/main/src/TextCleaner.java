@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class TextCleaner {
 
@@ -16,7 +14,6 @@ public class TextCleaner {
   static final int MIN_PHRASE_FREQ = 2;
 
   /**
-   * This class
    *
    * @param input
    * @return cleaned version of the original document
@@ -37,7 +34,6 @@ public class TextCleaner {
       Collections.addAll(wordsList, words); // Verbose but avoiding asList limitations
 
       int length = words.length;
-      System.out.println(length);
       int window = MIN_PHRASE_LEN;
 
       if (length >= window) {
@@ -46,43 +42,50 @@ public class TextCleaner {
             String ngram = String.join(" ", wordsList.subList(i, i + window));
             nGramsMap.merge(ngram, 1, Integer::sum);
           }
-          window++;  // Add sliding window of words to map tracking occurrences
+          window++;
         }
       }
     }
 
-    //    TODO: Make a map of built up phrases with a value counting the number of times this phrase
-    // If a phrase is part of a larger phrase in the final output, do not show it
-
-    Map<String, Integer> result =
-        nGramsMap.entrySet().stream()
-            .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-            .filter(map -> map.getValue().intValue() >= MIN_PHRASE_FREQ)
-            .collect(
-                Collectors.toMap(
-                    Map.Entry::getKey,
-                    Map.Entry::getValue,
-                    (oldValue, newValue) -> oldValue,
-                    LinkedHashMap::new));
-
-//    System.out.println(result.toString());
-
-    System.out.println(result.keySet().toString());
+    LinkedHashMap<String, Integer> reverseSortedMap = new LinkedHashMap<>();
+    nGramsMap.entrySet().stream().sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
+        .filter(map -> map.getValue().intValue() >= MIN_PHRASE_FREQ)
+        .forEachOrdered(x -> reverseSortedMap.put(x.getKey(), x.getValue()));  // Sorted by key to rollup
 
     ArrayList<String> topPhrases = new ArrayList<>();
     String curPhrase = "";
+    Integer comparisonCount = 0;
 
-    while (topPhrases.size() < MAX_NUM_PHRASES) {
-      for (String phrase : result.keySet()) {
-        if (!curPhrase.contains(phrase)) {
+    while (topPhrases.size() < MAX_NUM_PHRASES && comparisonCount <= reverseSortedMap.keySet().size()-1) {
+
+      for (String phrase : reverseSortedMap.keySet()) {
+        comparisonCount++;
+
+        if (topPhrases.size() == 0) {  // Assign a current phrase to start comparisons
           curPhrase = phrase;
+          topPhrases.add(curPhrase);
+        }
+
+        Integer countCur = reverseSortedMap.get(curPhrase);
+        Integer countPhrase = reverseSortedMap.get(phrase);
+
+        if (phrase.contains(curPhrase) && countPhrase == countCur) { // If sub phrase occurred same amount, it can be assumed that they are from the same phrase
+          topPhrases.remove(curPhrase);
+          topPhrases.add(phrase);
+          curPhrase = phrase;
+        } else if (curPhrase.contains(phrase)) {
+          continue;
+        } else {
+          topPhrases.add(phrase);
         }
       }
     }
-  }
 
-//   Iterate through the entire result, building up one of the answers "the quick brown fox jumped over" (longest string wth adjacent contained thus far)
-  // Move onto building the next of the 10 top phrases once the partial match is no more
+    Collections.sort(topPhrases);
+    System.out.println(topPhrases.toString());
+  }
 }
-// SAMPLE:
+
 // The quick brown fox jumped over the lazy dog. The lazy dog, peeved to be labeled lazy, jumped over a snoring turtle. In retaliation the quick brown fox jumped over ten snoring turtles. Then the quick brown fox refueled with some ice cream.
+
+// Cool calm and collected. Cool and collected. Cool calm and collected.
