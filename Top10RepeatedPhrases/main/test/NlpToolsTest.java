@@ -3,7 +3,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-class TextCleanerTest {
+class NlpToolsTest {
 
   public String example1 =
       "The quick brown fox jumped over the lazy dog.\n"
